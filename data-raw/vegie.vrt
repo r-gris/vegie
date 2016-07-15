@@ -1,0 +1,6 @@
+<OGRVRTDataSource>
+  <OGRVRTLayer name="list_parcels_hobart">
+  <SrcDataSource>/rdsi/PRIVATE/raad/data/listdata.thelist.tas.gov.au/opendata/data</SrcDataSource>
+  <SrcSQL>SELECT * FROM list_parcels_hobart WHERE FID = 0</SrcSQL>
+  </OGRVRTLayer>
+  </OGRVRTDataSource
