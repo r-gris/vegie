@@ -9,7 +9,7 @@ vrtemplate <- function() {
 
 updateFIDText <- function(x, fid = 0) {
   stopifnot(fid >= 0)
-  gsub("FID = 0", sprintf("FID = %i", as.integer(fid)))
+  gsub("FID = 0", sprintf("FID = %i", as.integer(fid)), x)
 }
 
 writeTmp <- function(x) {
@@ -49,22 +49,19 @@ buildDB <- function(dsn, layer, dbfile) {
   for (i in seq_along(tabs)) {
     dplyr::copy_to(db, tabs[[i]], name = names(tabs)[i])
   }
-  oldids <- data.frame(name = c("object_", "branch_", "vertex_"),
-                     maxval = c(max(tabs$o$object_), max(tabs$b))
   # ## do the remaining FIDs
-   fid <- 1
-  # while(TRUE) {
-     vrt <- updateFIDText(vrt, fid)
-     sfile <- writeTmp(vrt)
-     x <- try(rgdal::readOGR(vrt, layer, verbose = FALSE), silent = TRUE)
-     if (inherits(x), "try-error") break;
-  #
-  # ## decompose to tables
-   tabs <- spbabel::mtable(x)
-  # for (i in seq_along(tabs)) {
-     tabs <- update_tabs(tabs)
-     dplyr::db_insert_into( con = db, table = names(tabs)[i], values = tabs[[i]])
+  fid <- 1
+  while(TRUE) {
+    vrt <- updateFIDText(vrt, fid)
+    sfile <- writeTmp(vrt)
+    x <- try(rgdal::readOGR(vrt, layer, verbose = FALSE), silent = FALSE)
+    if (inherits(x, "try-error")) break;
+    fid <- fid + 1
+    # ## decompose to tables
+    tabs <- spbabel::mtable(x)
+    for (i in seq_along(tabs)) {
+      dplyr::db_insert_into( con = db$con, table = names(tabs)[i], values = tabs[[i]])
+    }
   }
-
   db
 }
