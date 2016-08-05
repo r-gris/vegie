@@ -37,10 +37,13 @@ buildVRT <- function(dsn, layer) {
 # @importFrom spbabel mtable
 buildDB <- function(dsn, layer, dbfile) {
   db <- dplyr::src_sqlite(dbfile, create = TRUE)
+  RSQLite::dbGetQuery(db$con, "PRAGMA synchronous = OFF")
+  RSQLite::dbGetQuery(db$con, "PRAGMA journal_mode = OFF")
+
   ## build VRT
-  vrt <- buildVRT(dsn, layer)
+  vrt0 <- buildVRT(dsn, layer)
   ## write temp VRT
-  sfile <- writeTmp(vrt)
+  sfile <- writeTmp(vrt0)
   ## the actual data
   x <- rgdal::readOGR(sfile, layer, verbose = FALSE)
 
@@ -59,9 +62,12 @@ buildDB <- function(dsn, layer, dbfile) {
   # ## do the remaining FIDs
   fid <- 1
   while(TRUE) {
-    vrt <- updateFIDText(vrt, fid)
+    vrt <- updateFIDText(vrt0, fid)
     sfile <- writeTmp(vrt)
-    x <- try(rgdal::readOGR(vrt, layer, verbose = FALSE), silent = FALSE)
+
+    x <- try(rgdal::readOGR(vrt, layer, verbose = FALSE), silent = TRUE)
+#browser()
+    #print(x)
     if (inherits(x, "try-error")) break;
     fid <- fid + 1
     # ## decompose to tables
