@@ -48,7 +48,7 @@ buildDB <- function(dsn, layer, dbfile) {
   x <- rgdal::readOGR(sfile, layer, verbose = FALSE)
 
   ## decompose to tables
-  tabs <- spbabel:::mtable.Spatial(x)
+  tabs <- spbabel::map_table(x)
   indexes <- list(list("object_"),
                   list(c("object_", "branch_")),
                   list(c("vertex_", "branch_")),
@@ -71,7 +71,7 @@ buildDB <- function(dsn, layer, dbfile) {
     if (inherits(x, "try-error")) break;
     fid <- fid + 1
     # ## decompose to tables
-    tabs <- spbabel:::mtable.Spatial(x)
+    tabs <- spbabel::map_table(x)
     print(fid)
     for (i in seq_along(tabs)) {
 
