@@ -2,7 +2,7 @@ vrtemplate <- function() {
   '<OGRVRTDataSource>
   <OGRVRTLayer name="%s">
   <SrcDataSource>%s</SrcDataSource>
-  <SrcSQL>SELECT * FROM %s WHERE FID = 0</SrcSQL>
+  <SrcSQL>SELECT * FROM %s WHERE FID = %s</SrcSQL>
   </OGRVRTLayer>
   </OGRVRTDataSource>'
 }
@@ -18,16 +18,16 @@ writeTmp <- function(x) {
   tmp
 }
 
-buildVRT <- function(dsn, layer) {
+buildVRT <- function(dsn, layer, fidoffset) {
   txt <- vrtemplate()
-  sprintf(txt, layer, dsn, layer)
+  sprintf(txt, layer, dsn, layer, fidoffset)
 }
 #' Build database from legacy format.
 #'
 #' @param dsn data source name
 #' @param layer layer name
 #' @param dbfile SQLite file name
-#'
+#' @fidoffset a hack in case the driver is 1-based (i.e MIF or TAB)
 #' @return
 #' @export
 #'
@@ -35,13 +35,13 @@ buildVRT <- function(dsn, layer) {
 #' @importFrom rgdal readOGR
 #' @importFrom dplyr copy_to src_sqlite
 # @importFrom spbabel mtable
-buildDB <- function(dsn, layer, dbfile) {
+buildDB <- function(dsn, layer, dbfile, fidoffset = 0) {
   db <- dplyr::src_sqlite(dbfile, create = TRUE)
   RSQLite::dbGetQuery(db$con, "PRAGMA synchronous = OFF")
   RSQLite::dbGetQuery(db$con, "PRAGMA journal_mode = OFF")
 
   ## build VRT
-  vrt0 <- buildVRT(dsn, layer)
+  vrt0 <- buildVRT(dsn, layer, fidoffset = fidoffset)
   ## write temp VRT
   sfile <- writeTmp(vrt0)
   ## the actual data
@@ -62,7 +62,7 @@ buildDB <- function(dsn, layer, dbfile) {
   # ## do the remaining FIDs
   fid <- 1
   while(TRUE) {
-    vrt <- updateFIDText(vrt0, fid)
+    vrt <- updateFIDText(vrt0, fid + fidoffset)
     sfile <- writeTmp(vrt)
 
     x <- try(rgdal::readOGR(vrt, layer, verbose = FALSE), silent = TRUE)
