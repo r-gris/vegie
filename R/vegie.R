@@ -3,6 +3,7 @@ vrtemplate <- function() {
   <OGRVRTLayer name="%s">
   <SrcDataSource>%s</SrcDataSource>
   <SrcSQL>SELECT * FROM %s WHERE FID = %s</SrcSQL>
+<FeatureCount>1</FeatureCount>
   </OGRVRTLayer>
   </OGRVRTDataSource>'
 }
@@ -34,7 +35,8 @@ buildVRT <- function(dsn, layer, fidoffset) {
 #' @examples
 #' @importFrom rgdal readOGR
 #' @importFrom dplyr copy_to src_sqlite
-# @importFrom spbabel mtable
+#' @importFrom spbabel map_table
+#' @importFrom tibble tibble
 buildDB <- function(dsn, layer, dbfile, fidoffset = 0) {
   db <- dplyr::src_sqlite(dbfile, create = TRUE)
   RSQLite::dbGetQuery(db$con, "PRAGMA synchronous = OFF")
@@ -46,7 +48,7 @@ buildDB <- function(dsn, layer, dbfile, fidoffset = 0) {
   sfile <- writeTmp(vrt0)
   ## the actual data
   x <- rgdal::readOGR(sfile, layer, verbose = FALSE)
-
+  meta <- tibble(crs = proj4string(x), layername = layer, dsn = dsn)
   ## decompose to tables
   tabs <- spbabel::map_table(x)
   indexes <- list(list("object_"),
@@ -59,6 +61,7 @@ buildDB <- function(dsn, layer, dbfile, fidoffset = 0) {
     dplyr::copy_to(db, tabs[[i]], name = names(tabs)[i], indexes = indexes[[i]],
                    temporary = FALSE)
   }
+  dplyr::copy_to(db, meta, temporary = FALSE)
   # ## do the remaining FIDs
   fid <- 1
   while(TRUE) {
