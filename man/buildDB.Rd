@@ -4,7 +4,7 @@
 \alias{buildDB}
 \title{Build database from legacy format.}
 \usage{
-buildDB(dsn, layer, dbfile)
+buildDB(dsn, layer, dbfile, slurp = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{dsn}{data source name}
@@ -12,6 +12,10 @@ buildDB(dsn, layer, dbfile)
 \item{layer}{layer name}
 
 \item{dbfile}{SQLite file name}
+
+\item{slurp}{if TRUE read all and write all in one go}
+
+\item{verbose}{if TRUE report on progress while building DB}
 }
 \description{
 Build database from legacy format.
