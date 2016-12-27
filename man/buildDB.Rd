@@ -4,7 +4,7 @@
 \alias{buildDB}
 \title{Build database from legacy format.}
 \usage{
-buildDB(dsn, layer, dbfile, slurp = FALSE, verbose = TRUE)
+buildDB(dsn, layer, dbfile, fidoffset = 0, slurp = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{dsn}{data source name}
